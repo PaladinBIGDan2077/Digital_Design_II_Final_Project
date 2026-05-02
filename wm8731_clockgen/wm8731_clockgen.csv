@@ -1,0 +1,21 @@
+# system info wm8731_clockgen on 2026.04.16.14:01:12
+system_info:
+name,value
+DEVICE,5CSEMA5F31C6
+DEVICE_FAMILY,Cyclone V
+GENERATION_ID,1776362445
+#
+#
+# Files generated for wm8731_clockgen on 2026.04.16.14:01:12
+files:
+filepath,kind,attributes,module,is_top
+simulation/wm8731_clockgen.v,VERILOG,,wm8731_clockgen,true
+simulation/submodules/wm8731_clockgen_audio_pll_0.v,VERILOG,,wm8731_clockgen_audio_pll_0,false
+simulation/submodules/wm8731_clockgen_audio_pll_0_audio_pll.vo,VERILOG,,wm8731_clockgen_audio_pll_0_audio_pll,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+wm8731_clockgen.audio_pll_0,wm8731_clockgen_audio_pll_0
+wm8731_clockgen.audio_pll_0.audio_pll,wm8731_clockgen_audio_pll_0_audio_pll
+wm8731_clockgen.audio_pll_0.reset_from_locked,altera_up_avalon_reset_from_locked_signal
