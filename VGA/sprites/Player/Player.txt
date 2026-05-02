@@ -1,0 +1,10 @@
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$ python bmp_to_mif.py Player.bmp Player.mif --bits 8
+Reading Player.bmp...
+Source BMP:   8-bit  (256 palette entries)
+Image size:   48 x 24 = 1152 pixels
+ROM depth:    1152
+ROM width:    8 bits
+Address bits: 11  (ADDR_WIDTH = 11 in your SV ROM)
+Use color_lut.sv to convert palette index → 24-bit RGB
+Wrote Player.mif
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$

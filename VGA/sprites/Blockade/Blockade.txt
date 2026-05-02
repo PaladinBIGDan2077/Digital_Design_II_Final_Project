@@ -1,0 +1,10 @@
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$ python bmp_to_mif.py Blockade.bmp Blockade.mif --bits 8
+Reading Blockade.bmp...
+Source BMP:   8-bit  (256 palette entries)
+Image size:   128 x 64 = 8192 pixels
+ROM depth:    8192
+ROM width:    8 bits
+Address bits: 13  (ADDR_WIDTH = 13 in your SV ROM)
+Use color_lut.sv to convert palette index → 24-bit RGB
+Wrote Blockade.mif
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$

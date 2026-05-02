@@ -1,0 +1,10 @@
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$ python bmp_to_mif.py Squirrel.bmp Squirrel.mif --bits 8
+Reading Squirrel.bmp...
+Source BMP:   8-bit  (256 palette entries)
+Image size:   64 x 48 = 3072 pixels
+ROM depth:    3072
+ROM width:    8 bits
+Address bits: 12  (ADDR_WIDTH = 12 in your SV ROM)
+Use color_lut.sv to convert palette index → 24-bit RGB
+Wrote Squirrel.mif
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$

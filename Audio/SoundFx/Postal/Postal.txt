@@ -1,0 +1,4 @@
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$ python3 wav_to_mif.py Postal.wav Postal.mif
+Read 4767 samples (0.60 s) from Postal.wav
+Padding with 61483 silent samples (written as a single MIF range entry)
+Wrote Postal.mif

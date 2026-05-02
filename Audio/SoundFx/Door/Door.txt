@@ -1,0 +1,4 @@
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$  python3 wav_to_mif.py Door.wav Door.mif
+Read 8173 samples (1.02 s) from Door.wav
+Padding with 58077 silent samples (written as a single MIF range entry)
+Wrote Door.mif

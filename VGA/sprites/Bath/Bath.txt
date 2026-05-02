@@ -1,0 +1,10 @@
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$ python bmp_to_mif.py Bath.bmp Bath.mif --bits 8
+Reading Bath.bmp...
+Source BMP:   8-bit  (256 palette entries)
+Image size:   72 x 48 = 3456 pixels
+ROM depth:    3456
+ROM width:    8 bits
+Address bits: 12  (ADDR_WIDTH = 12 in your SV ROM)
+Use color_lut.sv to convert palette index → 24-bit RGB
+Wrote Bath.mif
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$

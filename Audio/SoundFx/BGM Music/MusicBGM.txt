@@ -1,0 +1,4 @@
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$ python3 wav_to_mif.py MusicBGM.wav MusicBGM.mif
+Read 66181 samples (8.27 s) from MusicBGM.wav
+Padding with 69 silent samples (written as a single MIF range entry)
+Wrote MusicBGM.mif

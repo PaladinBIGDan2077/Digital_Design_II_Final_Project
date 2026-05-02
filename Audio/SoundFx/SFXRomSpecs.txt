@@ -1,0 +1,23 @@
+Fire: 			    0  samples - 4272  samples = Diff.	4272  Samples  /  0.534 	seconds
+Burger: 		 4398  samples - 10107 samples = Diff.	5709  Samples  /  0.713625 	seconds
+Kill Squirrel:		10264  samples - 18378 samples = Diff.	8114  Samples  /  1.01425	seconds
+Kill Postal Van:        18483  samples - 25150 samples = Diff.	6667  Samples  /  0.833375	seconds
+Kill Bath:		25246  samples - 42120 samples = Diff.	16874 Samples  /  2.10925	seconds
+Kill Door:		42242  samples - 52000 samples = Diff.	9758  Samples  /  1.21975	seconds
+Dead:			52275  samples - 62000 samples = Diff.	9725  Samples  /  1.215625	seconds
+GameOver:		62230  samples - 82225 samples = Diff.	19995 Samples  /  2.499375	seconds
+
+//   0      fire              0x00000      4,272
+//   1      collect (burger)  0x0112E      5,709
+//   2      kill_squirrel     0x02818      8,114
+//   3      kill_truck        0x04833      6,667
+//   4      kill_bathtub      0x0629E      16,874
+//   5      kill_door         0x0A502      9,758
+//   6      die               0x0CC33      9,725
+//   7      game_over         0x0F316      19,995
+
+
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$ python3 wav_to_mif.py SFXRom.wav SFXRom.mif
+Read 82339 samples (10.29 s) from SFXRom.wav
+Wrote SFXRom.mif
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$

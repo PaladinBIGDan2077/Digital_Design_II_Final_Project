@@ -1,0 +1,4 @@
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$ python3 wav_to_mif.py Start.wav Start.mif
+Read 18016 samples (2.25 s) from Start.wav
+Padding with 48234 silent samples (written as a single MIF range entry)
+Wrote Start.mif

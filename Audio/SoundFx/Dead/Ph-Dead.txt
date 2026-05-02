@@ -1,0 +1,4 @@
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$ python3 wav_to_mif.py Ph-Dead.wav Ph-Dead.mif
+Read 2576 samples (0.32 s) from Ph-Dead.wav
+Padding with 63674 silent samples (written as a single MIF range entry)
+Wrote Ph-Dead.mif

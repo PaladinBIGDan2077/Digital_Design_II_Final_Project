@@ -1,0 +1,4 @@
+(base) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/SoundFX$ python3 wav_to_mif.py Squirrel.wav Squirrel.mif
+Read 6217 samples (0.78 s) from Squirrel.wav
+Padding with 60033 silent samples (written as a single MIF range entry)
+Wrote Squirrel.mif

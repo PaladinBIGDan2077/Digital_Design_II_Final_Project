@@ -1,0 +1,4 @@
+(base) dlomis@DLOMIS-P1G6~Final-Project-DDIISoundFX$ python3 wav_to_mif.py Ph-Burger.wav Ph-Burger.mif
+Read 3943 samples (0.49 s) from Ph-Burger.wav
+Padding with 62307 silent samples (written as a single MIF range entry)
+Wrote Ph-Burger.mif

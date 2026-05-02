@@ -1,0 +1,10 @@
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$ python bmp_to_mif.py Door.bmp Door.mif --bits 8
+Reading Door.bmp...
+Source BMP:   8-bit  (256 palette entries)
+Image size:   56 x 64 = 3584 pixels
+ROM depth:    3584
+ROM width:    8 bits
+Address bits: 12  (ADDR_WIDTH = 12 in your SV ROM)
+Use color_lut.sv to convert palette index → 24-bit RGB
+Wrote Door.mif
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$

@@ -1,0 +1,10 @@
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$ python bmp_to_mif.py Burger.bmp Burger.mif --bits 8
+Reading Burger.bmp...
+Source BMP:   8-bit  (256 palette entries)
+Image size:   48 x 32 = 1536 pixels
+ROM depth:    1536
+ROM width:    8 bits
+Address bits: 11  (ADDR_WIDTH = 11 in your SV ROM)
+Use color_lut.sv to convert palette index → 24-bit RGB
+Wrote Burger.mif
+(molssi_best_practices) dlomis@DLOMIS-P1G6:~/Final-Project-DDII/GraphicsFX$
