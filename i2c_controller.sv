@@ -38,7 +38,7 @@ module wm8731_i2c_config
     localparam          int                 CLK_FREQ                                        = 50_000_000;
     localparam          int                 I2C_FREQ                                        = 100_000;
     localparam          int                 PHASE_LEN                                       = CLK_FREQ / I2C_FREQ / 4;
-    // Typedef Enum Structs
+    // Type Definitions of Structures/Enumerators
     typedef             enum                logic               [3:0]                       {
         S_IDLE,
         S_START,

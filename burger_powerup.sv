@@ -19,7 +19,8 @@
 //                                  4/27/2025   DJL  1        Original Code
 //                                  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-module burger_ctrl (
+module burger_ctrl
+(
     input                                   logic                                   clock,
     input                                   logic                                   reset_active_low,
     input                                   logic                                   game_active,
