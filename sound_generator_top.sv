@@ -77,8 +77,8 @@ module sound_effects_generator_top
                                                                                     );
 
     audio_clk_divider                       clock_dividers                          (
-                                                                                    .clk_in(clock_12m288),
-                                                                                    .rst_n(reset_active_low),
+                                                                                    .clock_12m288(clock_12m288),
+                                                                                    .reset_active_low(reset_active_low),
                                                                                     .bclk(clock_bclk),
                                                                                     .lrclk(clock_sampling),
                                                                                     .sample_pulse(sampling_pulse)
