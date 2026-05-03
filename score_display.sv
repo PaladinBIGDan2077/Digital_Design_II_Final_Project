@@ -79,9 +79,9 @@ module score_lives
                                             logic               [15:0]              cur_bcd;
     // Internal Functions
     // BCD to Seven Segment Decoder
-    function            automatic           logic               [6:0]                       bcd_seg
+    function            automatic           logic               [6:0]               bcd_seg
     (
-        input               logic               [3:0]                                   d
+        input               logic               [3:0]                           d
     );
         case (d)
             4'd0: bcd_seg = SEG_0;
@@ -99,9 +99,9 @@ module score_lives
     endfunction
 
     // Score Incrementer
-    function            automatic           logic               [6:0]                       pts
+    function            automatic           logic               [6:0]               pts
     (
-        input               logic               [3:0]                                   s
+        input               logic               [3:0]                           s
     );
         case (s)
             4'b1000: pts = 7'd30;
@@ -113,9 +113,9 @@ module score_lives
     endfunction
 
     // BCD Extractor
-    function            automatic           logic               [15:0]                      to_bcd
+    function            automatic           logic               [15:0]              to_bcd
     (
-        input               logic               [13:0]                                  bin
+        input               logic               [13:0]                          bin
     );
         logic [29:0] scratch;
         scratch = 30'(bin);

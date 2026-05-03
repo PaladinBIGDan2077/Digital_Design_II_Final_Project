@@ -21,7 +21,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module sound_effects_generator_top
 (
-    input                                                                           clock_50,
+    input                                                                           clock,
     input                                                                           reset_active_low,
     input                                                                           sel_gameover,
     input                                                                           sel_dead1,
@@ -71,7 +71,7 @@ module sound_effects_generator_top
     // Clock Generation
     wm8731_clockgen                         sound_clock                             (
                                                                                     .audio_clk_clk(clock_12m288),
-                                                                                    .ref_clk_clk(clock_50),
+                                                                                    .ref_clk_clk(clock),
                                                                                     .ref_reset_reset(reset_active_high),
                                                                                     .reset_source_reset(reset_pll_line)
                                                                                     );
@@ -86,7 +86,7 @@ module sound_effects_generator_top
 
     // Sound Codec Configuration
     wm8731_i2c_config                       configuration_codec                     (
-                                                                                    .clock(clock_50),
+                                                                                    .clock(clock),
                                                                                     .reset_active_low(reset_active_low),
                                                                                     .i2c_sclk(FPGA_I2C_SCLK),
                                                                                     .i2c_sdat(FPGA_I2C_SDAT)
