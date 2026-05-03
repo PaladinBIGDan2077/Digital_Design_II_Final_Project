@@ -408,7 +408,6 @@ set_location_assignment PIN_AK2 -to ADC_SCLK
 set_location_assignment PIN_AE12 -to SW9
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW9
 set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to SW9
-set_global_assignment -name QIP_FILE adc_test/synthesis/adc_test.qip
 set_global_assignment -name MIF_FILE Squirrel.mif
 set_global_assignment -name MIF_FILE Postal.mif
 set_global_assignment -name MIF_FILE Player.mif
