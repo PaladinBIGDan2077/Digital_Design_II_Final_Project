@@ -1,0 +1,16 @@
+<sld_project_info>
+  <project>
+    <hash md5_digest_80b="fa349211ba34aa05c119"/>
+  </project>
+  <file_info>
+    <file device="5CSEMA5F31C6" path="final_project_top.sof" usercode="0xFFFFFFFF"/>
+  </file_info>
+  <sld_infos>
+    <sld_info hpath="sound_effects_generator_top:inst13|wm8731_clockgen:sound_clock" name="sound_clock">
+      <assignment_values>
+        <assignment_value text="QSYS_NAME wm8731_clockgen HAS_SOPCINFO 1 GENERATION_ID 1776362477"/>
+      </assignment_values>
+      <parameters/>
+    </sld_info>
+  </sld_infos>
+</sld_project_info>
