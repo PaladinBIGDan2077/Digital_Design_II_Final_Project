@@ -24,7 +24,7 @@ module reset_inverter
     input                                                                           a,
     output                                  logic                                   b
 );
-
+    // Continous Assignments
     assign                                  b                                       = !a;
 
 endmodule
@@ -35,7 +35,7 @@ module pll_reset
     input                                                                           reset_active_low,
     output                                  logic                                   clock_signal_ready
 );
-
+    // Continous Assignments
     assign                                  clock_signal_ready                      = reset_active_low & pll_locked;
 
 endmodule

@@ -211,6 +211,7 @@ module wm8731_i2c_config
         end
     end
 
+    // Continous Assignments
     assign                                  i2c_sclk                                = scl_out;
     assign                                  i2c_sdat                                = sda_oe ? sda_out : 1'bz;
     assign                                  phase_tick                              = (phase_cnt == PHASE_LEN - 1);

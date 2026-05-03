@@ -100,6 +100,7 @@ module audio_clk_divider
         end
     end
 
+    // Continous Assignments
     assign                                  bclk                                    = bclk_int;
     assign                                  lrclk                                   = lrclk_int;
     assign                                  bclk_rise                               = bclk_int & ~bclk_prev;

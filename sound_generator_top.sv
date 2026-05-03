@@ -94,8 +94,8 @@ module sound_effects_generator_top
 
     // Audio Stream
     i2s_transmitter                         audio_stream                            (
-                                                                                    .clk_12m288(clock_12m288),
-                                                                                    .rst_n(reset_active_low),
+                                                                                    .clock_12m288(clock_12m288),
+                                                                                    .reset_active_low(reset_active_low),
                                                                                     .bclk(clock_bclk),
                                                                                     .lrclk(clock_sampling),
                                                                                     .bit_sample_in(sfx_data),
@@ -103,8 +103,8 @@ module sound_effects_generator_top
                                                                                     );
 
     sound_sequencer                         audio_player                            (
-                                                                                    .clk(clock_12m288),
-                                                                                    .rst_n(reset_active_low),
+                                                                                    .clock_12m288(clock_12m288),
+                                                                                    .reset_active_low(reset_active_low),
                                                                                     .sample_pulse(sampling_pulse),
                                                                                     .sfx_select(sound_effect_selector),
                                                                                     .play_trigger(play),
@@ -118,17 +118,9 @@ module sound_effects_generator_top
                                                                                     .clock(clock_12m288),
                                                                                     .q(rom_data)
                                                                                     );
-    // Continous Assignments
-    assign                                  AUD_XCK                                 = clock_12m288;
-    assign                                  AUD_DACLRCK                             = clock_sampling;
-    assign                                  AUD_BCLK                                = clock_bclk;
-    assign                                  sel_dead                                = sel_dead1 || sel_dead2;
-    assign                                  sel_bullet                              = sel_bullet1 || sel_bullet2;
-    assign                                  sfx_data                                = seq_playing ? rom_data : 16'h0000;
-    assign                                  play_pulse                              = ((enemy_kill[0] == 1'b1) || (enemy_kill[1] == 1'b1) || (enemy_kill[2] == 1'b1) || (enemy_kill[3] == 1'b1) || sel_bullet || sel_dead || sel_burger || sel_gameover );
 
     // Sound Effect Selector
-    always_ff @(posedge clock_12m288 or negedge reset_active_low) begin
+    always_ff @(posedge clock_12m288, negedge reset_active_low) begin
         if (!reset_active_low) begin
             sound_effect_selector <= 3'o0;
             play <= 1'b0;
@@ -175,5 +167,14 @@ module sound_effects_generator_top
             end
         end
     end
+
+    // Continous Assignments
+    assign                                  AUD_XCK                                 = clock_12m288;
+    assign                                  AUD_DACLRCK                             = clock_sampling;
+    assign                                  AUD_BCLK                                = clock_bclk;
+    assign                                  sel_dead                                = sel_dead1 || sel_dead2;
+    assign                                  sel_bullet                              = sel_bullet1 || sel_bullet2;
+    assign                                  sfx_data                                = seq_playing ? rom_data : 16'h0000;
+    assign                                  play_pulse                              = ((enemy_kill[0] == 1'b1) || (enemy_kill[1] == 1'b1) || (enemy_kill[2] == 1'b1) || (enemy_kill[3] == 1'b1) || sel_bullet || sel_dead || sel_burger || sel_gameover);
 
 endmodule

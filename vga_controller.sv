@@ -103,6 +103,7 @@ module vga_controller
         end
     end
 
+    // Continous Assignments
     assign                                  hsync_n                                 = (hcount >= H_ACTIVE + H_FP && hcount < H_ACTIVE + H_FP + H_SYNC) ? 1'b0 : 1'b1;
     assign                                  vsync_n                                 = (vcount >= V_ACTIVE + V_FP && vcount < V_ACTIVE + V_FP + V_SYNC) ? 1'b0 : 1'b1;
     assign                                  blank_n                                 = (hcount < H_ACTIVE && vcount < V_ACTIVE) ? 1'b1 : 1'b0;

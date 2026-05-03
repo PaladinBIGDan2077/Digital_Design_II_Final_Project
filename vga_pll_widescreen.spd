@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file path="vga_pll_widescreen_sim/vga_pll_widescreen.vo" type="VERILOG" />
+ <topLevel name="vga_pll_widescreen" />
+ <deviceFamily name="cyclonev" />
+</simPackage>
