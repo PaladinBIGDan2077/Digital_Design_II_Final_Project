@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Title:                           Enemy Row Top Module
 // Filename:                        enemy_grid.sv
-// Version:                         11
+// Version:                         2
 // Author:                          Daniel J. Lomis 
 // Date:                            4/25/2025  
 // Location:                        Blacksburg, Virginia 
