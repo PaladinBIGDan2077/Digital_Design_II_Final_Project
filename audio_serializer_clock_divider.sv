@@ -25,7 +25,8 @@
 //                                  4/8/2025   DJL  1        Original Code
 //                                  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-module audio_clk_divider (
+module audio_clk_divider
+(
     input                                   logic                                           clock_12m288,
     input                                   logic                                           reset_active_low,
     output                                  logic                                           bclk,

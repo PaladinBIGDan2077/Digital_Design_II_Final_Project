@@ -86,8 +86,8 @@ module sound_effects_generator_top
 
     // Sound Codec Configuration
     wm8731_i2c_config                       configuration_codec                     (
-                                                                                    .clk(clock_50),
-                                                                                    .rst_n(reset_active_low),
+                                                                                    .clock(clock_50),
+                                                                                    .reset_active_low(reset_active_low),
                                                                                     .i2c_sclk(FPGA_I2C_SCLK),
                                                                                     .i2c_sdat(FPGA_I2C_SDAT)
                                                                                     );

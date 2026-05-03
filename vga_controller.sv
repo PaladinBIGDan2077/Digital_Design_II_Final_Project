@@ -19,7 +19,8 @@
 //                                  4/8/2025   DJL  1        Original Code
 //                                  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-module vga_controller (
+module vga_controller
+(
     input                                   logic                                   vga_clock,
     input                                   logic                                   reset_active_low,
     output                                  logic                                   sync_n,
