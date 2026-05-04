@@ -1,23 +1,47 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           Burger Power Up Module
+// Title:                           Burger Power-Up Module
 // Filename:                        burger_powerup.sv
 // Version:                         4
-// Author:                          Daniel J. Lomis 
-// Date:                            4/27/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/27/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/27/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Spawns burger power-ups at random intervals from the right edge
+//                                  of the 1280-wide playfield and moves them leftward at constant
+//                                  velocity. A 16-bit Galois LFSR (taps 15,13,12,10) advances once
+//                                  per frame_tick. When the top 11 bits match SPAWN_PATTERN and no
+//                                  burger is currently active, a new burger spawns. The burger
+//                                  travels left at BURGER_SPEED = 4 px/frame, starting from X = 1280.
+//                                  It despawns when it exits the left edge (X < 4) or when hit by
+//                                  either player's bullet, triggering a single-cycle collect_sfx
+//                                  pulse. Y is always fixed at BURGER_Y = 80.
+//
+//                                  Spawn behavior:
+//                                    The 16-bit LFSR creates a pseudorandom spawn interval.
+//                                    SPAWN_PATTERN = 11'h2EF matched against LFSR[10:0].
+//                                    Average spawn rate is about once every 63 seconds.
+//                                    The SPAWN_PATTERN is checked combinatorially every frame,
+//                                    so spawn_trigger pulses one cycle when the condition is true.
+//
+//                                  Collision and sound:
+//                                    burger_hit_p1 OR burger_hit_p2 produces burger_hit, which
+//                                    deactivates the sprite and asserts collect_sfx for exactly
+//                                    one clock cycle. Both players can collect the same burger
+//                                    if both bullets hit it simultaneously (unlikely but possible).
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/27/2025  DJL  1        Original Code; fixed burger position, no spawn or movement logic
+//                                  4/27/2025  DJL  2        Added 16-bit Galois LFSR (taps 15,13,12,10); advance once per frame_tick; SPAWN_PATTERN match triggers spawning from right edge
+//                                  4/27/2025  DJL  3        Added leftward movement at BURGER_SPEED px/frame; despawn when X < BURGER_SPEED or on bullet collision
+//                                  4/27/2025  DJL  4        Added collect_sfx output; OR burger_hit_p1 and burger_hit_p2 into burger_hit for simultaneous-collision support; pulsed collect_sfx single cycle on hit
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module burger_ctrl
 (

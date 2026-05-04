@@ -1,23 +1,68 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           Collision Detector
-// Filename:                        collision_detect.sv
+// Title:                           Collision Detector Module
+// Filename:                        collision_detector.sv
 // Version:                         12
-// Author:                          Daniel J. Lomis 
-// Date:                            4/26/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/26/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/26/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Fully combinatorial axis-aligned bounding box (AABB) collision
+//                                  detector for all game objects: player ships, bullets, enemies,
+//                                  enemy bullets, burger power-up, and optional blockade shields.
+//                                  Runs entirely on game_active; all outputs are zero when the game
+//                                  is not active. Outputs are registered one cycle later via
+//                                  always_ff for clean timing.
+//
+//                                  Collision types detected:
+//                                    Player vs. Enemy Bullet       - outputs c_p1_hit, c_p2_hit (also sets c_eb_kill to deactivate)
+//                                    Player 1 Bullet vs. Blockade  - outputs c_p1_bull_kill
+//                                    Player 1 Bullet vs. Enemies   - outputs c_enemy_kill[row], c_enemy_kill_col (3-bit sprite index), c_p1_score_inc (row-encoded)
+//                                    Player 1 Bullet vs. Burger    - outputs c_burg_p1
+//                                    (same trio for Player 2, gated by two_player input)
+//                                    Enemy Bullet vs. Blockade     - outputs c_eb_kill[row]
+//
+//                                  Core helper functions:
+//                                    aabb()                 - generic 4-parameter AABB test
+//                                    bullet_hits_blockade() - checks left and right blockade zones
+//                                    sprite_x()             - wraps enemy sprite X across screen edge
+//
+//                                  Sprite/blockade parameters:
+//                                    Each enemy row has its own {SPR_W, SPR_H, Y, SPACING, N_SPR}
+//                                    Blockade zones (left & right): static rects at Y between [505, 569]
+//                                    Bullet dimensions: 4x14; Enemy bullet: 4x14; Burger: 48x32
+//
+//                                  Score encoding (per-row when bullet kills enemy):
+//                                    Row 0 (squirrel)  -> 0x8
+//                                    Row 1 (truck)     -> 0x4
+//                                    Row 2 (bathtub)   -> 0x2
+//                                    Row 3 (door)      -> 0x1
+//                                    OR'd together if multiple rows killed in one cycle.
+//
+//                                  Two-player support:
+//                                    Player 2 collisions are checked only when two_player = 1.
+//                                    In 1P mode, c_p2_hit, c_p2_bull_kill, etc. remain low.
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/26/2025  DJL  1        Original Code; single AABB test for player vs. enemy bullet only
+//                                  4/26/2025  DJL  2        Added player bullet vs. enemy collision detection with nested loop over 4 rows x 8 sprites per row
+//                                  4/26/2025  DJL  3        Added sprite_x() function to wrap enemy X coordinate across screen boundary (< 0 or >= 1280)
+//                                  4/27/2025  DJL  4        Added enemy_kill_col output (3-bit column index) to identify which sprite in a row was hit
+//                                  4/27/2025  DJL  5        Added score encoding (SCORE_ENC[4]) per-row lookup; c_p1_score_inc OR'd with row-specific bits on hit
+//                                  4/27/2025  DJL  6        Added blockade shield zones; bullet hit blockade > auto-kill bullet; enemy bullet hit blockade > auto-kill
+//                                  4/28/2025  DJL  7        Added bullet_hits_blockade() helper to check both left and right zones with separate rect definitions
+//                                  4/29/2025  DJL  8        Added burger collision; c_burg_p1 asserts when P1 bullet hits active burger sprite (48x32 rect)
+//                                  4/30/2025  DJL  9        Added Player 2 bullet vs. enemy and burger logic gated on (p2_ba && two_player); separate c_p2_score_inc and c_p2_bull_hit_enemy outputs
+//                                  4/30/2025  DJL  10       Added p1_bull_hit_enemy and p2_bull_hit_enemy outputs to gate bullet deactivation separately from burger collision
+//                                  5/2/2025   DJL  11       Separated combinatorial logic (always_comb) from registered outputs (always_ff @posedge clock) for timing closure and proper edge-triggered collision reporting
+//                                  5/3/2025   DJL  12       Gated entire collision logic tree on game_active; all combinatorial outputs zero when game is inactive; prevents spurious hits during IDLE or GAME_OVER FSM states
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module collision_detect
 (

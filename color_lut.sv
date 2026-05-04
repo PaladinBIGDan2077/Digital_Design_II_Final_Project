@@ -1,23 +1,58 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           256 Color Look Up Table Module
+// Title:                           256-Color Look-Up Table (LUT) Module
 // Filename:                        color_lut.sv
-// Version:                         14
-// Author:                          Daniel J. Lomis 
-// Date:                            4/19/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Version:                         2
+// Author:                          Daniel J. Lomis
+// Date:                            4/19/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University,
+//                                  Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/19/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Combinatorial 256-entry color palette that maps 8-bit palette
+//                                  indices (0x00-0xFF) to 24-bit RGB(8,8,8) color values. Used
+//                                  throughout the graphics pipeline to convert sprite ROM indices
+//                                  into display colors. Entries 0x00-0xE1 cover the VGA 256-color
+//                                  cube and basic colors (black, dark red, dark green, cyan, light
+//                                  gray, light blue, and various gradients). Entries 0xE2-0xEF are
+//                                  grayscale ramps. Entries 0xF9-0xFE are bright primaries and
+//                                  secondaries (pure red, green, yellow, blue, magenta, cyan).
+//                                  Entry 0xFF is white; 0x00 is black.
+//
+//                                  LUT organization:
+//                                    0x00-0x07   - VGA basic colors (black, dark red, dark green,
+//                                                   dark yellow, dark blue, dark magenta, dark cyan,
+//                                                   light gray)
+//                                    0x08-0x09   - Windows palette (light green, light blue)
+//                                    0x0A-0xE1   - 216-color 6×6×6 RGB cube + grayscale blends
+//                                                   (all combinations of R, G, B ∈ {0, 0x33, 0x66,
+//                                                   0x99, 0xCC, 0xFF})
+//                                    0xE2-0xEF   - 14-entry grayscale ramp (0x08 through 0xF0)
+//                                    0xF0-0xF5   - Additional grays for anti-aliasing / dithering
+//                                    0xF6-0xF8   - Special colors (cream, light gray, medium gray)
+//                                    0xF9-0xFF   - Bright primaries (red, green, yellow, blue,
+//                                                   magenta, cyan, white)
+//
+//                                  Combinatorial logic:
+//                                    Always_comb case statement matches color_idx against all 256
+//                                    entries, selects the corresponding 24-bit RGB value, then
+//                                    splits it into separate 8-bit r, g, b outputs via assignment.
+//                                    No registered state; lookup latency is combinatorial.
+//
+//                                  Usage:
+//                                    This LUT is instantiated once per frame buffer or graphics
+//                                    pipeline stage that needs to convert palette indices to true
+//                                    color.
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/19/2025   DJL  1        Original Code; basic 16-color VGA palette (0x00-0x0F)
+//                                  4/23/2025   DJL  2        Expanded to 256 entries; added 6x6x6 RGB cube (0x0A-0xE1)
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module color_lut_8b
 (

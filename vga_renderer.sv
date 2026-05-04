@@ -2,22 +2,83 @@
 // Title:                           VGA Renderer Module
 // Filename:                        vga_renderer.sv
 // Version:                         14
-// Author:                          Daniel J. Lomis 
-// Date:                            4/19/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/19/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/19/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Composites all game sprites (enemies, players, bullets, burger,
+//                                  blockades, background) into a single RGB(8,8,8) pixel stream for
+//                                  1280×720 @ 60 Hz VGA output. Uses a two-stage pipeline on the
+//                                  VGA pixel clock: stage 0 determines which sprite(s) to draw at
+//                                  the current scan position via combinatorial overlap tests; stage 1
+//                                  (one cycle later) multiplexes sprite ROM data or solid colors and
+//                                  outputs the final RGB result. Supports configurable background
+//                                  color (black or white) via alignment input.
+//
+//                                  Sprite priority (drawn back-to-front, last write wins):
+//                                    DRAW_BG           - background (black or white)
+//                                    DRAW_BLK          - left and right blockade shields (128×64 each)
+//                                    DRAW_ROW0/1/2/3   - enemy rows (squirrel, postal, bathtub, door)
+//                                    DRAW_SHIP_P2      - Player 2 ship (only if two_player = 1)
+//                                    DRAW_SHIP_P1      - Player 1 ship
+//                                    DRAW_BURGER       - burger power-up (48×32)
+//                                    DRAW_EBULL        - enemy bullets (red, 4×14 hardcoded)
+//                                    DRAW_PBULL        - player bullets (green, 4×14 hardcoded)
+//
+//                                  Pipeline stages:
+//                                    Stage 0 (combinatorial):
+//                                      - Compares (h_la, v_la) against all sprite bounding boxes
+//                                      - Selects the topmost sprite via last-write priority
+//                                      - Computes the address offset into that sprite's ROM
+//                                      - Outputs selection (sel_s0) and ROM addresses
+//                                    Stage 1 (registered):
+//                                      - Latches sel_s0 -> sel_s1
+//                                      - Muxes sprite ROM data or uses hardcoded colors
+//                                      - Applies blank_n (outputs black during blanking intervals)
+//                                      - Drives RGB output
+//
+//                                  Helper functions:
+//                                    in_spr() - AABB test: returns true if (hx, vy) falls inside
+//                                               sprite at (sx, sy) with dimensions (w, h)
+//                                    sprite_x() - wraps enemy sprite X across screen boundary
+//
+//                                  Sprite ROMs (externally provided):
+//                                    sq_pix (squirrel)     12-bit addr
+//                                    pt_pix (postal truck) 13-bit addr
+//                                    bt_pix (bathtub)      12-bit addr
+//                                    dk_pix (door)         12-bit addr
+//                                    ship_pix (ship)       11-bit addr (shared by P1/P2)
+//                                    blk_pix (blockade)    13-bit addr
+//                                    burg_pix (burger)     11-bit addr
+//
+//                                  Hard-coded colors:
+//                                    Player bullets         - green (0x00FF00)
+//                                    Enemy bullets          - red   (0xFF0000)
+//                                    Sprite ROM color == 0  - background (black or white per alignment)
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/19/2025   DJL  1        Original Code; simple background fill
+//                                  4/19/2025   DJL  2        Added single sprite ROM support; introduced in_spr() AABB test
+//                                  4/20/2025   DJL  3        Added enemy row rendering; nested loop over 4 rows × 8 sprites
+//                                  4/21/2025   DJL  4        Added player ship rendering; separate ship ROM address for P1/P2
+//                                  4/21/2025   DJL  5        Added player bullet rendering with hard-coded green color; introduced pipeline stage split
+//                                  4/23/2025   DJL  6        Added enemy bullet rendering with red color; looped over 4 enemy rows
+//                                  4/25/2025   DJL  7        Introduced two-stage pipeline: stage 0 (comb) priority sel, stage 1 (reg) color mux and RGB output
+//                                  4/27/2025   DJL  8        Added burger power-up sprite rendering with active gating
+//                                  4/27/2025   DJL  9        Added blockade shield rendering (left and right rects)
+//                                  4/28/2025   DJL  10       Added two_player gating for Player 2 ship rendering in sprite priority
+//                                  4/30/2025   DJL  11       Added sprite alive-mask gating to skip dead enemies; added active-flag gating for burger and enemy bullets
+//                                  5/2/2025    DJL  12       Added alignment input for dual background color (white/black); used when ROM pixel == 0x00
+//                                  5/2/2025    DJL  13       Refactored sprite selection into sprite_sel_t enum; introduced sel_s0 and sel_s1 registers for cleaner priority encoding
+//                                  5/3/2025    DJL  14       Added blank_n blanking during sync intervals; added rom_color to separate sprite pixel data from RGB multiplexing
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module vga_renderer
 (

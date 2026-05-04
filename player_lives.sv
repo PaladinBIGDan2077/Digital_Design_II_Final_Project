@@ -1,23 +1,32 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           Player Lives Renderer Module
+// Title:                           Player Lives HUD Renderer Module
 // Filename:                        player_lives.sv
 // Version:                         5
 // Author:                          Daniel J. Lomis
-// Date:                            4/30/2025
-// Location:                        Blacksburg, Virginia 
+// Date:                            4/27/2025
+// Location:                        Blacksburg, Virginia
 // Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
 // Course:                          ECE 4514 - Digital Design II
 // Instructor:                      Professor Jason Thweatt
-//  
+//
 // Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
 // Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+//
+// Description:                     Renders up to 6 life icons (3 per player) in the HUD. Three
+//                                  sprite ROMs and color LUTs per player, with positions mirrored:
+//                                  P1 left-aligned, P2 right-aligned. Shows only the active lives
+//                                  (hidden if life index >= lives count). One-cycle pipeline delay
+//                                  matches upstream renderer. Outputs active flag and RGB only when
+//                                  a visible life icon is rendered and game_active = 1.
 //
 //                                  Date        By   Version  Change Description
 //                                  ============================================
-//                                  4/30/2025   DJL  1        Original Code
-//                                  
+//                                  4/27/2025   DJL  1        Original Code; P1 lives only
+//                                  4/28/2025   DJL  2        Added P2 lives with mirrored layout
+//                                  4/29/2025   DJL  3        Added color LUT per life icon; palette conversion from ROM indices
+//                                  4/30/2025   DJL  4        Added pipeline delay registers (p1_in_d, p2_in_d, lives_d) for one-cycle alignment
+//                                  5/1/2025    DJL  5        Added game_active gating; transparent output (active=0) when inactive
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module lives_hud
 (

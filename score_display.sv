@@ -1,23 +1,37 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           Seven Segment Display Module
+// Title:                           Score and Lives Display Module
 // Filename:                        score_display.sv
 // Version:                         8
-// Author:                          Daniel J. Lomis 
-// Date:                            4/28/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/28/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/28/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Accumulates player scores from enemy kills and burger bonuses,
+//                                  converts to BCD, and drives six 7-segment HEX displays. Scores
+//                                  cap at 9999. In PLAYING state, displays active player's score
+//                                  (1 or 2) and lives; alternates between P1 and P2 every 120
+//                                  frames in 2P mode. In IDLE state shows "LAACrE" (Last Action Reesie);
+//                                  in GAME_OVER shows "EndEnd" (game over). Score incrementing uses
+//                                  row-encoded kill values (row 0 => 30, row 1 => 20, row 2 => 15, row 3 => 10
+//                                  points) and burger hit => 100 bonus.
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/28/2025   DJL  1        Original Code; single player score only
+//                                  4/29/2025   DJL  2        Added enemy row-encoded score increment; burger bonus (+100 points)
+//                                  4/29/2025   DJL  3        Added two-player mode; score alternate display every 120 frames
+//                                  4/30/2025   DJL  4        Added game state display: "LAACrE" for IDLE, "EndEnd" for GAME_OVER
+//                                  5/1/2025    DJL  5        Implemented BCD conversion function (to_bcd) for 14-bit → 16-bit BCD
+//                                  5/2/2025    DJL  6        Added 7-segment decoder (bcd_seg) for digit→segment pattern mapping
+//                                  5/2/2025    DJL  7        Separated score accumulator logic from display multiplexer; added reset_scores input
+//                                  5/3/2025    DJL  8        Added player indicator on HEX5 (shows "1" or "2" during PLAYING)
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module score_lives
 (

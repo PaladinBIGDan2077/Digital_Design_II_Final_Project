@@ -2,22 +2,83 @@
 // Title:                           Title Screen Module
 // Filename:                        title_screen.sv
 // Version:                         4
-// Author:                          Daniel J. Lomis 
-// Date:                            5/1/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            5/1/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University,
+//                                  Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  5/2/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Renders the full IDLE-state title screen with bitmap-font text
+//                                  drawn entirely combinatorially. No frame buffer or sprite ROMs -
+//                                  each character is rendered on-the-fly using a 7x7 bitmap LUT
+//                                  (char_bm function) and a pixel-in-character test (pix_char
+//                                  function) that runs against current scan position (hcount, vcount).
+//
+//                                  Screen layout:
+//                                    Title area (Y=90)
+//                                      "LAST ACTION" (white, size 8, ~384px wide)
+//                                      "REESIE" (green, size 8, ~288px wide)
+//                                    Blink area (Y=310, 30 Hz cadence)
+//                                      "PRESS START" (red, blinking, size 8)
+//                                    Instruction block (Y=420-510, grey, size 3)
+//                                      "RED BUTTON ON PADDLE 1 TO START" (31 chars)
+//                                      "SW0: 1P / 2P MODE" (18 chars)
+//                                      "RESET: KEY0" (11 chars)
+//                                      "SW1: WHITE FOR CALIBRATION" (26 chars)
+//                                    Credits (Y=560-588, dimmer white, size 3)
+//                                      "DEVELOPED BY DANIEL J. LOMIS" (28 chars)
+//                                      "THE LOMIS COMPANY OF VIRGINIA C MAY 2026" (40 chars)
+//                                    Separators
+//                                      Cyan line (Y=80-82, across full width)
+//                                      Cyan line (Y=238-240, across full width)
+//                                      Grey line (Y=548-549, across full width)
+//
+//                                  Font sizes (character width in pixels):
+//                                    S_LG = 8  (48 px/char x 56 px/row, ~11 chars per line max)
+//                                    S_MD = 5  (30 px/char x 35 px/row, ~43 chars per line)
+//                                    S_SM = 3  (18 px/char x 21 px/row, ~71 chars per line)
+//
+//                                  Character bitmap LUT (7 rows × 5 cols per char):
+//                                    Supports uppercase A–Z, digits 0–9, space, /, ., :, and
+//                                    copyright symbol (0x01). Each character is encoded as a
+//                                    35-bit bitmap (7 bits x 5 cols). Missing characters default
+//                                    to blank (35'b0). ASCII input used directly (0x41='A', etc).
+//
+//                                  Blinking (blink_cnt):
+//                                    6-bit counter (0-63) incremented every frame_tick, wrapping
+//                                    every 64 frames (~1.07 s at 60 Hz). blink_on = (blink_cnt < 32),
+//                                    yielding ~530 ms on, ~530 ms off. "PRESS START" text drawn only
+//                                    when blink_on=1, creating the classic arcade attract-mode pulse.
+//
+//                                  Rendering pipeline:
+//                                    1. pix_char() tests if (hcount, vcount) falls within a
+//                                       character bounding box at (char_x, char_y) with size scale_sz.
+//                                       If inside, computes row/col within the 7x5 bitmap and checks
+//                                       the corresponding bit in char_bm(ascii_code).
+//                                    2. All 124+ characters evaluated combinatorially per scan pixel.
+//                                    3. Pixel flags (t0-t10 for title, s0-s5 for subtitle, etc.)
+//                                       OR'd together; first hit wins (priority implicit in order).
+//                                    4. Color block applies final RGB based on which text region
+//                                       was hit, with special handling for blink_on and alignment.
+//
+//                                  Output control:
+//                                    title_on = (game_state == IDLE) && blank_n
+//                                    active = title_on. When inactive, output RGB = (0, 0, 0).
+//                                    alignment input switches background color: white (0xFF, 0xFF,
+//                                    0xFF) for calibration mode, black (0x00, 0x00, 0x00) otherwise.
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  5/1/2025   DJL  1        Original Code; title and subtitle ("LAST ACTION" + "REESIE") rendered in white/green at top of screen
+//                                  5/2/2025   DJL  2        Added "PRESS START" text with blinking cadence controlled by 6-bit frame counter; blink_cnt increments on frame_tick; blink_on = (blink_cnt<32)
+//                                  5/2/2025   DJL  3        Added instruction block (4 lines, grey) and credits block (2 lines, dimmer white); separated text regions by color; added cyan and grey separator lines for visual layout
+//                                  5/3/2025   DJL  4        Parameterized font sizes (S_LG, S_MD, S_SM) and text positions (X_*, Y_*); expanded character bitmap LUT to support full instruction set (A-Z,0-9, space, /, ., :, C); refactored pixel-per-character rendering to handle up to 124+ simultaneous character tests per scan pixel
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module title_screen
 (

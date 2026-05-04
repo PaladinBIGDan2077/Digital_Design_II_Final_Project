@@ -1,23 +1,65 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Title:                           Player 2 Controller Module
 // Filename:                        player2_controller.sv
-// Version:                         7
-// Author:                          Daniel J. Lomis 
-// Date:                            4/24/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Version:                         2
+// Author:                          Daniel J. Lomis
+// Date:                            4/28/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/24/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Controls Player 2's ship position, bullet, lives, invincibility
+//                                  window, and sound trigger pulses in two-player mode. Identical
+//                                  to player1_controller.sv in logic and structure, but constrained
+//                                  to the right half of the screen (X = 640..1232) and gated by
+//                                  the two_player input.
+//
+//                                  Ship position (two_player mode only):
+//                                    player_x is mapped continuously from the 12-bit LTC2308 ADC
+//                                    paddle value (CH1) to the right-half playing field:
+//                                      x = 640 + (adc_val * 592) >> 12  (right half: 640..1232)
+//                                    In 1P mode, player_x = 0 (off-screen left).
+//                                    player_y is fixed at SHIP_Y_POS = 650.
+//
+//                                  Bullet:
+//                                    Fires from the ship center (player_x + SHIP_W/2) on
+//                                    fire_press or a latched prior press, but only when
+//                                    two_player = 1 and game_active = 1. Travels upward at
+//                                    BULLET_SPEED = 5 px/frame. Deactivated when it reaches
+//                                    y < 5, on bull_kill, or on enemy_hit.
+//                                    Only one bullet may be in flight at a time.
+//
+//                                  Lives and invincibility:
+//                                    Starts at START_LIVES = 3, only in two_player mode.
+//                                    A hit pulse decrements lives and starts a 90-frame (~1.5 s)
+//                                    invincibility window. Hits received during the window are
+//                                    discarded. Lives floor at 0; die_sfx pulses on each valid
+//                                    hit. In 1P mode, lives is held at START_LIVES.
+//
+//                                  Input latching:
+//                                    fire_press and hit are latched (fire_latch, hit_latch) to
+//                                    capture pulses arriving between frame_tick boundaries.
+//                                    Both latches are cleared on reset_game.
+//
+//                                  Two-player gating:
+//                                    All game logic (bullet, lives, invincibility, sound output)
+//                                    is wrapped in 'if (two_player)' so the module safely disables
+//                                    when 1P mode is active. bullet_active, lives, inv_cnt, and
+//                                    fire_latch are explicitly reset when two_player = 0.
+//
+//                                  Sound outputs (single clock-cycle pulses):
+//                                    fire_sfx - asserted when a bullet is successfully spawned
+//                                    die_sfx  - asserted when a valid hit is processed
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/28/2025   DJL  1        Original Code; copy of player1_ctrl for Player 2, updated for two_player support
+//                                  5/2/2025    DJL  2        Minor Bug Fixes
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module player2_ctrl
 (

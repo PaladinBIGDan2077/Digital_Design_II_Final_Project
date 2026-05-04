@@ -1,23 +1,29 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           Monostable Multivibrator Input Decoder
+// Title:                           Button Debouncer and Input Decoder
 // Filename:                        button_debouncer.sv
 // Version:                         2
-// Author:                          Daniel J. Lomis 
-// Date:                            4/14/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/14/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/14/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Synchronizes asynchronous button inputs and generates single-
+//                                  cycle falling-edge pulses. One register stage per input provides
+//                                  metastability protection. Outputs fire1, fire2, and start_press
+//                                  are active-high, one-clock-wide pulses triggered on button press
+//                                  (active-low transition). Currently fire1 and start_press share
+//                                  the same JOY_1 input.
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/14/2025  DJL  1        Original Code; no metastability guard
+//                                  4/15/2025  DJL  2        Added register stage for metastability protection; falling-edge detection
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module input_decode
 (

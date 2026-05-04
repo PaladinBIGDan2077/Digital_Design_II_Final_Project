@@ -4,20 +4,29 @@
 // Version:                         3
 // Author:                          Daniel J. Lomis
 // Date:                            4/22/2025
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University,
+//                                  Bradley Department of Electrical and Computer Engineering
 // Course:                          ECE 4514 - Digital Design II
 // Instructor:                      Professor Jason Thweatt
-//  
+//
 // Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
 // Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+//
+// Description:                     Integrates the VGA graphics pipeline: instantiates vga_renderer
+//                                  (sprite composition engine), seven sprite ROMs (squirrel, postal,
+//                                  bathtub, door, player ship, blockade, burger), lives HUD overlay,
+//                                  and title screen overlay. Final RGB output is a priority mux:
+//                                  title_screen => lives_hud => game_graphics. All modules share the
+//                                  VGA pixel clock and receive scan position (hcount, vcount) for
+//                                  synchronous rendering.
 //
 //                                  Date        By   Version  Change Description
 //                                  ============================================
-//                                  4/22/2025   DJL  1        Original Code
-//                                  
+//                                  4/22/2025   DJL  1        Original Code; game graphics only
+//                                  4/27/2025   DJL  2        Added lives HUD overlay; nested mux for title_active / hud_active gating
+//                                  5/2/2025    DJL  3        Added title screen overlay with game_state and frame_tick inputs
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module  vga_renderer_output_top
 (
