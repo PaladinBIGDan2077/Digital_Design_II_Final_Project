@@ -2,22 +2,74 @@
 // Title:                           Enemy Row Spawner Module
 // Filename:                        enemy.sv
 // Version:                         11
-// Author:                          Daniel J. Lomis 
-// Date:                            4/25/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/25/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/25/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Manages one horizontal row of up to NUM_SPRITES enemies on a
+//                                  1280x720 display. Handles row translation, per-sprite alive
+//                                  tracking, LFSR-driven random bullet firing, and bullet movement.
+//                                  Fully parameterized so that enemies_top.sv can instantiate
+//                                  multiple rows with independent Y positions, speeds, and
+//                                  directions.
+//
+//                                  Row movement:
+//                                    base_x advances by MOVE_SPEED pixels every frame_tick.
+//                                    MOVE_RIGHT selects left-to-right or right-to-left wrapping.
+//                                    Each sprite's screen X = base_x + col * SPACING.
+//                                    On reset or reset_game, base_x returns to its spawn edge.
+//
+//                                  Alive mask:
+//                                    alive[NUM_SPRITES-1:0] is a hot bitmask, initialised to all
+//                                    ones. kill_en + kill_col clears the corresponding bit when
+//                                    collision_detector confirms a bullet hit. any_alive prevents
+//                                    firing and movement once the row is fully eliminated.
+//
+//                                  Enemy bullet (one per row):
+//                                    A 12-bit Galois LFSR (taps 11,10,9,3) advances one step per
+//                                    frame_tick. fire_trigger asserts when the top FIRE_BITS of
+//                                    the LFSR match FIRE_PATTERN, no bullet is already in flight,
+//                                    and at least one sprite is alive. The firing column is chosen
+//                                    by pick_alive_col(), a combinatorial function that walks
+//                                    LFSR[2:0] mod NUM_SPRITES to find the nearest living sprite,
+//                                    ensuring dead columns are skipped. The bullet spawns at
+//                                    spawn_x = base_x + fire_col * SPACING + SPRITE_W/2 and
+//                                    travels downward at BULLET_SPEED px/frame. eb_kill
+//                                    deactivates it on collision or game reset.
+//
+//                                  Parameters:
+//                                    SCREEN_W     - display width
+//                                    SCREEN_H     - display height
+//                                    ROW_Y        - fixed Y coordinate of this row
+//                                    MOVE_RIGHT   - 1 = left -> right wrap, 0 = right -> left wrap
+//                                    MOVE_SPEED   - px/frame translation rate
+//                                    SPRITE_W/H   - sprite bounding box in pixels
+//                                    NUM_SPRITES  - enemies per row
+//                                    SPACING      - pixel pitch between sprite centres
+//                                    BULLET_SPEED - enemy bullet descent rate px/frame
+//                                    FIRE_PATTERN - LFSR match value that triggers a shot
+//                                    FIRE_BITS    - how many MSBs of LFSR to compare
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/25/2025  DJL  1        Original Code; fixed-position sprites, no movement or bullet logic
+//                                  4/25/2025  DJL  2        Added base_x register and per-frame MOVE_SPEED translation with screen wrap for both directions
+//                                  4/26/2025  DJL  3        Added alive bitmask and kill_en / kill_col inputs to clear individual sprites on collision
+//                                  4/26/2025  DJL  4        Added 12-bit Galois LFSR (taps 11,10,9,3) for pseudorandom timing; LFSR advances once per frame_tick
+//                                  4/27/2025  DJL  5        Added fire_trigger logic comparing top FIRE_BITS of LFSR to FIRE_PATTERN; parameterized FIRE_PATTERN/FIRE_BITS
+//                                  4/28/2025  DJL  6        Added enemy bullet registers (eb_x, eb_y, eb_active) and downward movement at BULLET_SPEED px/frame
+//                                  4/28/2025  DJL  7        Added pick_alive_col()to skip dead columns when selecting firing sprite
+//                                  4/30/2025  DJL  8        Added eb_kill input to deactivate bullet from collision_detector; bullet also deactivates at SCREEN_H
+//                                  5/1/2025   DJL  9        Added reset_game input to restore alive mask, bullet state, and base_x without a full system reset
+//                                  5/2/2025   DJL  10       Promoted movement, bullet, and fire constants to module parameters so enemies_top.sv can vary rows independently at instantiation
+//                                  5/2/2025   DJL  11       Gated LFSR advance and movement on game_active to freeze enemies during IDLE and GAME_OVER FSM states
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module enemy_row
 #(  // Parameters

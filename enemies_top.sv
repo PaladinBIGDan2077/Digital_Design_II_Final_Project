@@ -1,23 +1,45 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           Enemy Row Top Module
-// Filename:                        enemy_grid.sv
+// Title:                           Enemy Grid Top Module
+// Filename:                        enemies_top.sv
 // Version:                         2
-// Author:                          Daniel J. Lomis 
-// Date:                            4/25/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/25/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/25/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Top-level wrapper that instantiates four enemy_row modules,
+//                                  forming the complete enemy grid for the game. Each row has
+//                                  a unique sprite theme, Y position, movement direction, sprite
+//                                  dimensions, and LFSR fire pattern. All rows share a common
+//                                  bullet velocity (BULLET_VELOCITY = 10 px/frame) and movement
+//                                  speed (MOVEMENT_SPEED = 5 px/frame).
+//
+//                                  Row layout:
+//                                    u_row0 - Squirrel row   Y=120, 7 sprites, 64x48, >, FIRE=0xA3C
+//                                    u_row1 - Postal truck   Y=220, 6 sprites, 80x56, <, FIRE=0x5B1
+//                                    u_row2 - Dog Bath       Y=330, 7 sprites, 72x48, >, FIRE=0xD2E
+//                                    u_row3 - Door Knocking  Y=440, 8 sprites, 56x64, <, FIRE=0x3F7
+//
+//                                  Packed bus layout (per-row fields concatenated, row 0 = LSBs):
+//                                    base_x      [43:0]   - 4 x 11-bit row base X positions
+//                                    eb_x        [43:0]   - 4 x 11-bit enemy bullet X positions
+//                                    eb_y        [39:0]   - 4 x 10-bit enemy bullet Y positions
+//                                    eb_active   [3:0]    - per-row bullet-in-flight flags
+//                                    enemy_alive [47:0]   - 4 x 12-bit per-sprite alive masks
+//                                    enemy_kill  [3:0]    - per-row kill strobe from collision_detector
+//                                    enemy_kill_col[11:0] - 4 x 3-bit column index of killed sprite
+//                                    eb_kill     [3:0]    - per-row bullet kill strobe
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/25/2025   DJL  1        Original Code; single squirrel row instantiated to verify bus interface with collision_detector
+//                                  4/29/2025   DJL  2        Added remaining three rows (postal truck, dog bath, door knocking) with alternating MOVE_RIGHT directions and FIRE_PATTERN values; promoted shared velocity and speed to localparams BULLET_VELOCITY and MOVEMENT_SPEED
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module enemy_grid
 (

@@ -2,22 +2,62 @@
 // Title:                           Player 1 Controller Module
 // Filename:                        player1_controller.sv
 // Version:                         9
-// Author:                          Daniel J. Lomis 
-// Date:                            4/24/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Casdasd
+// Author:                          Daniel J. Lomis
+// Date:                            4/24/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/24/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Controls Player 1's ship position, bullet, lives, invincibility
+//                                  window, and sound trigger pulses for a 1280x720 space-shooter
+//                                  game running at 60 Hz on the DE1-SoC.
+//
+//                                  Ship position:
+//                                    player_x is mapped continuously from the 12-bit LTC2308 ADC
+//                                    paddle value (CH0) using a fixed-point scale:
+//                                      1P mode: x = (adc_val * 1232) >> 12  (full 1280 px width)
+//                                      2P mode: x = (adc_val *  592) >> 12  (left half only)
+//                                    player_y is fixed at SHIP_Y_POS = 650.
+//
+//                                  Bullet:
+//                                    Fires from the ship centre (player_x + SHIP_W/2) on
+//                                    fire_press or a latched prior press. Travels upward at
+//                                    BULLET_SPEED = 5 px/frame. Deactivated when it reaches
+//                                    y < 5, on bull_kill, or on enemy_hit.
+//                                    Only one bullet may be in flight at a time.
+//
+//                                  Lives and invincibility:
+//                                    Starts at START_LIVES = 3. A hit pulse decrements lives
+//                                    and starts a 90-frame (~1.5 s) invincibility window
+//                                    (INVINCIBLE_FR). Hits received during the window are
+//                                    discarded. Lives floor at 0; die_sfx pulses on each
+//                                    valid hit regardless of remaining lives.
+//
+//                                  Input latching:
+//                                    fire_press and hit are latched (fire_latch, hit_latch) so
+//                                    that pulses arriving between frame_ticks are not dropped.
+//                                    Both latches are cleared on reset_game.
+//
+//                                  Sound outputs (single clock-cycle pulses):
+//                                    fire_sfx - asserted when a bullet is successfully spawned
+//                                    die_sfx  - asserted when a valid hit is processed
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/24/2025   DJL  1        Original Code; fixed ship position, no bullet or lives logic
+//                                  4/25/2025   DJL  2        Added ADC-driven player_x mapping with fixed-point scale via >> 12
+//                                  4/25/2025   DJL  3        Added bullet spawning and upward movement; bullet deactivates attop of screen
+//                                  4/25/2025   DJL  4        Added lives counter and hit detection; die_sfx pulse on hit
+//                                  4/27/2025   DJL  5        Added 90-frame invincibility window (inv_cnt) to prevent multi-hit on single collision event
+//                                  4/27/2025   DJL  6        Added fire_latch and hit_latch to capture pulses arriving between frame_tick boundaries
+//                                  4/28/2025   DJL  7        Added two_player input; split ADC scale between 1P (full width) and 2P (left half) modes
+//                                  4/29/2025   DJL  8        Added bull_kill and enemy_hit inputs to deactivate bullet on collision events from collision_detector
+//                                  4/30/2025   DJL  9        Added reset_game input to restore lives, clear bullet, and flush both latches on game restart
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module player_ctrl
 (
