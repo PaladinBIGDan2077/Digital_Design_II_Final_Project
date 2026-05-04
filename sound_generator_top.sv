@@ -1,23 +1,44 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Title:                           Sound Generator Top Module
+// Title:                           Sound Effects Generator Top Module
 // Filename:                        sound_generator_top.sv
-// Version:                         6
-// Author:                          Daniel J. Lomis 
-// Date:                            4/6/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     This module represents the colmination of several modules.
+// Version:                         5
+// Author:                          Daniel J. Lomis
+// Date:                            4/6/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University,
+//                                  Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/6/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Top-level integration module for the game audio subsystem.
+//                                  Accepts one-cycle trigger pulses from the game logic for eight
+//                                  prioritized sound effects (bullet fire, burger collect, four
+//                                  enemy-kill types, player death, and game over) and drives the
+//                                  Wolfson WM8731 audio codec over I2S/I2C.
+//
+//                                  Instantiates and connects the following submodules:
+//                                    - reset_inverter          : converts active-low reset to active-high
+//                                    - wm8731_clockgen         : PLL producing 12.288 MHz audio clock
+//                                    - audio_clk_divider       : derives BCLK, LRCLK, and 8 kHz sample pulse
+//                                    - wm8731_i2c_config       : I2C initialization sequence for WM8731
+//                                    - i2s_transmitter         : serializes 16-bit PCM samples to DACDAT
+//                                    - sound_sequencer         : streams ROM addresses for selected SFX
+//                                    - sfx_rom                 : 17-bit addressed PCM sample ROM (45,200 samples)
+//
+//                                  Priority encoding (highest to lowest):
+//                                    sel_bullet > sel_burger > enemy_kill[0..3] > sel_dead > sel_gameover
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/6/2025    DJL  1        Original Code
+//                                  4/10/2025   DJL  2        Added Various Submodules
+//                                  4/14/2025   DJL  3        Completed Functional Top Module
+//                                  4/20/2025   DJL  4        Implementation of Multiplexer Sound Selector
+//                                  4/27/2025   DJL  5        Updated Clock Inputs / Bug Fixes
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module sound_effects_generator_top
 (

@@ -1,36 +1,62 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Title:                           Audio Sequencer Module for SoundFx
 // Filename:                        sound_sequencer.sv
-// Version:                         7
-// Author:                          Daniel J. Lomis 
-// Date:                            4/22/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
+// Version:                         6
+// Author:                          Daniel J. Lomis
+// Date:                            4/22/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
+//
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
 // Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Lorem Ipsum
 //
-//                                  SFX table:
-//                                  Index  Name              Start addr   Length (samples @ 8 kHz)
-//                                  0      fire              0x00000      2,402
-//                                  1      burger            0x0112E      4,303
-//                                  2      kill_squirrel     0x02818      5,566
-//                                  3      kill_truck        0x04833      4,783
-//                                  4      kill_bathtub      0x0629E      14,997
-//                                  5      kill_door         0x0A502      6,193
-//                                  6      die               0x0CC33      7,586
-//                                  7      game_over         0x0F316      18,397
+// Description:                     Streams ROM addresses for one of eight selectable sound effects
+//                                  stored back-to-back in a single concatenated 17-bit PCM ROM
+//                                  (sfx_all.hex). On each 8 kHz sample_pulse strobe, the module
+//                                  advances rom_addr by one until the selected effect's sample
+//                                  count is exhausted, then returns to IDLE.
 //
-//                                  Total ROM depth = 45,200 samples = 17-bit address space
+//                                  A play_trigger pulse (asserted for exactly one clock cycle by
+//                                  sound_effects_generator_top) loads the start address and
+//                                  computed end address from SFX_TABLE for the effect indexed by
+//                                  sfx_select[2:0].
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/22/2025   DJL  1        Original Code
-//                                  
+//                                  Implementation:
+//                                    SFX_TABLE - packed struct array (sfx_entry_t) of 8 entries,
+//                                                each holding a 17-bit start address and 17-bit
+//                                                sample count. end_addr is computed combinatorially
+//                                                as start + length - 1 at load time.
+//                                    FSM       - three-state (IDLE / PLAYING / DONE), implemented
+//                                                as a separated always_comb / always_ff pair.
+//                                                DONE transitions back to IDLE in one cycle.
+//                                    playing   - combinatorial decode of (state == PLAYING);
+//                                                used by sound_effects_generator_top to gate
+//                                                sfx_data to 16'h0000 when silent.
+//
+//                                  SFX table (all durations at 8 kHz):
+//                                    Index  Name           Start addr  Samples   Duration
+//                                    0      fire           0x00000      2,402    ~0.300 s
+//                                    1      burger         0x0112E      4,303    ~0.538 s
+//                                    2      kill_squirrel  0x02818      5,566    ~0.696 s
+//                                    3      kill_truck     0x04833      4,783    ~0.598 s
+//                                    4      kill_bathtub   0x0629E     14,997    ~1.875 s
+//                                    5      kill_door      0x0A502      6,193    ~0.774 s
+//                                    6      die            0x0CC33      7,586    ~0.948 s
+//                                    7      game_over      0x0F316     18,397    ~2.299 s
+//
+//                                  Total ROM depth = 63,227 samples, 17-bit address space
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/22/2025  DJL  1        Original Code; single hardcoded SFX, flat counter with no FSM
+//                                  4/24/2025  DJL  2        Parameterized start/length for one selectable SFX via sfx_select input
+//                                  4/27/2025  DJL  3        Expanded to 8 SFX entries
+//                                  4/28/2025  DJL  4        Introduced three-state FSM (IDLE / PLAYING / DONE) to cleanly handle play_trigger edge and end-of-sample detection
+//                                  4/29/2025  DJL  5        Separated FSM
+//                                  4/30/2025  DJL  6        Added end_addr register computed at load time (start + length - 1) to avoid recomputing every sample cycle
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module sound_sequencer
 (

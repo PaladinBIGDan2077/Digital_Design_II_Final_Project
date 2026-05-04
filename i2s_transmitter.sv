@@ -2,30 +2,50 @@
 // Title:                           Stereo Sound Chip Streamer Module (I2S)
 // Filename:                        i2s_transmitter.sv
 // Version:                         7
-// Author:                          Daniel J. Lomis 
-// Date:                            4/20/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
+// Author:                          Daniel J. Lomis
+// Date:                            4/20/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
+//
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
 // Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Configures the WM8731 over I2C (2-wire, 100 kHz) on power-up.
-//                                  Runs on 50 MHz sysclock.
 //
-//                                  I2C transaction format for WM8731:
-//                                      [START] [0x34 (device addr, R/W=0)] [ACK] [B15:B8] [ACK] [B7:B0] [ACK] [STOP]
-//                                      where B[15:9] = register address, B[8:0] = register data.
+// Description:                     Serializes 16-bit PCM audio samples to the WM8731 DAC over
+//                                  the I2S interface. The same sample value is sent to both the
+//                                  left and right channels, producing mono audio on a stereo codec.
 //
-//                                  The controller steps through CONFIG_REGS[] automatically from reset.
-//                                  config_done goes high and stays high once all registers are written.
+//                                  Clocking:
+//                                    clock_12m288 - master clock; all registers clocked here
+//                                    bclk         - bit clock (512 kHz), driven externally by
+//                                                   audio_clk_divider; edges detected via bclk_prev
+//                                    lrclk        - left/right word clock (8 kHz); rising edge
+//                                                   triggers left channel load, falling edge
+//                                                   triggers right channel load
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
+//                                  I2S serial protocol (WM8731 slave mode, 16-bit):
+//                                    On each LRCLK edge, the 16-bit sample is latched into a
+//                                    shift register (left_shift / right_shift). One BCLK cycle
+//                                    after the edge (i2s_delay), bits are shifted out MSB-first
+//                                    on falling BCLK edges for 16 bits; DACDAT held LOW for the
+//                                    remaining BCLK cycles in the 32-cycle half-frame.
+//
+//                                  Signal routing:
+//                                    left_sample  = bit_sample_in  (mono, same source)
+//                                    right_sample = bit_sample_in  (mono, same source)
+//                                    dacdat       — registered serial output to WM8731 DACDAT pin
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
 //                                  4/20/2025   DJL  1        Original Code
-//                                  
+//                                  4/21/2025   DJL  2        Split into separate left_shift andright_shift registers loaded on lrclk_rise and lrclk_fall respectively
+//                                  4/23/2025   DJL  3        Added bclk_prev / lrclk_prev edge detection registers; replaced direct bclk sensitivity with clock_12m288 to eliminate gated-clock warnings
+//                                  4/24/2025   DJL  4        Added i2s_delay flag to insert one BCLK dead cycle after each LRCLK edge per I2S specification
+//                                  4/25/2025   DJL  5        Added tx_left flag to select between left_shift and right_shift during BCLK shift-out loop
+//                                  4/27/2025   DJL  6        Added bit_cnt (5-bit) to gate shift-out to exactly 16 bits; DACDAT held LOW for remaining BCLK cycles in frame
+//                                  5/1/2025    DJL  7        Tied left_sample and right_sample both to bit_sample_in for mono operation;cleaned up reset state initialization
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module i2s_transmitter
 (

@@ -2,22 +2,45 @@
 // Title:                           VGA Controller Module
 // Filename:                        vga_controller.sv
 // Version:                         6
-// Author:                          Daniel J. Lomis 
-// Date:                            4/8/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
-// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     This module represents the colmination of several modules.
+// Author:                          Daniel J. Lomis
+// Date:                            4/8/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University,
+//                                  Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/8/2025   DJL  1        Original Code
-//                                  
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
+// Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
+//
+// Description:                     Generates industry-standard 1280x720 @ 60 Hz (720p) VGA/HDMI
+//                                  timing signals from a pixel clock input. Implements a dual
+//                                  counter (horizontal and vertical) that tracks the current scan
+//                                  position across the full raster including blanking intervals.
+//
+//                                  Timing parameters (VESA 720p @ 60 Hz):
+//                                    Horizontal: 1280 active + 110 FP + 40 sync + 220 BP = 1650 total
+//                                    Vertical:    720 active +   5 FP +  5 sync +  20 BP =  750 total
+//
+//                                  Outputs:
+//                                    hcount_out  — current horizontal pixel position (0..1279 active)
+//                                    vcount_out  — current vertical line position    (0..719  active)
+//                                    hsync_n     — active-low horizontal sync pulse
+//                                    vsync_n     — active-low vertical sync pulse
+//                                    blank_n     — active-high blanking enable (HIGH = active region)
+//                                    sync_n      — composite sync, held LOW during operation
+//                                    frame_tick  — single-cycle pulse on the rising edge of vsync_n;
+//                                                  used system-wide as the 60 Hz game frame strobe
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/8/2025    DJL  1        Original Code
+//                                  4/9/2025    DJL  2        Widened hcount/vcount to 32-bit logic to prevent synthesis width mismatch warnings
+//                                  4/10/2025   DJL  3        Added frame_tick output derived from rising edge detection on vsync_n via vsync_r
+//                                  4/12/2025   DJL  4        Separated h_next/v_next into explicit always_comb blocks for timing analysis
+//                                  4/15/2025   DJL  5        Narrowed hcount_out/vcount_out to 11-bit and 10-bit respectively for downstream renderer compatibility
+//                                  4/20/2025   DJL  6        Timing adjustment due to occasional OUT OF SYNC error
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module vga_controller
 (

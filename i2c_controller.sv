@@ -2,30 +2,43 @@
 // Title:                           Sound Chip I2C Controller Module
 // Filename:                        i2c_controller.sv
 // Version:                         3
-// Author:                          Daniel J. Lomis 
-// Date:                            4/20/2025  
-// Location:                        Blacksburg, Virginia 
-// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering 
-// Course:                          ECE 4514 - Digital Design II 
-// Instructor:                      Professor Jason Thweatt 
-//  
-// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)  
+// Author:                          Daniel J. Lomis
+// Date:                            4/20/2025
+// Location:                        Blacksburg, Virginia
+// Organization:                    Virginia Polytechnic Institute and State University, Bradley Department of Electrical and Computer Engineering
+// Course:                          ECE 4514 - Digital Design II
+// Instructor:                      Professor Jason Thweatt
+//
+// Hardware Description Language:   SystemVerilog 2023 (IEEE 1800-2023)
 // Compiler Tool:                   Altera Quartus Prime: Lite Edition 25.1
-// 
-// Description:                     Configures the WM8731 over I2C (2-wire, 100 kHz) on power-up.
-//                                  Runs on 50 MHz sysclock.
+//
+// Description:                     Configures the WM8731 audio codec over I2C (2-wire, 100 kHz)
+//                                  automatically on power-up or reset. Runs entirely on the
+//                                  50 MHz system clock; SCL is derived by dividing down via a
+//                                  phase counter (PHASE_LEN = 50 MHz / 100 kHz / 4 = 125 cycles).
 //
 //                                  I2C transaction format for WM8731:
-//                                      [START] [0x34 (device addr, R/W=0)] [ACK] [B15:B8] [ACK] [B7:B0] [ACK] [STOP]
-//                                      where B[15:9] = register address, B[8:0] = register data.
+//                                    [START] [0x34 addr, R/W=0] [ACK] [B15:B8] [ACK] [B7:B0] [ACK] [STOP]
+//                                    where B[15:9] = register address, B[8:0] = register data.
 //
-//                                  The controller steps through CONFIG_REGS[] automatically from reset.
-//                                  config_done goes high and stays high once all registers are written.
+//                                  Seven registers are written in sequence via CONFIG_REGS[0:6]:
+//                                    R15 (0x1E00) - software reset
+//                                    R6  (0x0C67) - power down: ADC/MIC/LINEIN off, DAC+OUT on
+//                                    R4  (0x0812) - analog audio path
+//                                    R5  (0x0A00) - digital audio path (unmute DAC)
+//                                    R7  (0x0E02) - I2S format, 16-bit word length, slave mode
+//                                    R8  (0x100C) - sampling control: 8 kHz, USB mode
+//                                    R9  (0x1201) - activate digital audio interface
 //
-//                                  Date        By   Version  Change Description  
-//                                  ============================================  
-//                                  4/20/2025   DJL  1        Original Code
-//                                  
+//                                  config_done latches HIGH in S_DONE and is never cleared,
+//                                  preventing re-configuration without a full system reset.
+//
+//                                  Date        By   Version  Change Description
+//                                  ============================================
+//                                  4/20/2025  DJL  1        Original Code; flat sequential FSM with hardcoded SCL/SDA toggling
+//                                  4/21/2025  DJL  2        Refactored to 12-state enum FSM; introduced phase/phase_cnt divider to cleanly separate SCL timing from state transitions
+//                                  4/24/2025  DJL  3        Updated Sampling Rate from 16 kHz to 8 kHz due to memory constraints
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 module wm8731_i2c_config
 (
