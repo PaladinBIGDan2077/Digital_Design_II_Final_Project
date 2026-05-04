@@ -59,6 +59,7 @@
 //                                  5/2/2025    DJL  9        Refined go_timer logic: counts only when in GAME_OVER state and frame_tick asserts; resets to 0 on exit from GAME_OVER; go_hold_done gates acceptance of next start_press
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+module game_fsm
 (
     input                                   logic                                   clock,
     input                                   logic                                   reset_active_low,
